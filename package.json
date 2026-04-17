@@ -10,10 +10,7 @@
       "dotenv": "^17.2.2",
       "zod": "^4.1.13",
       "typescript": "^5",
-      "convex": "^1.33.1",
-      "better-auth": "1.5.3",
-      "@better-auth/expo": "1.5.3",
-      "@convex-dev/better-auth": "^0.11.3"
+      "convex": "^1.33.1"
     }
   },
   "type": "module",

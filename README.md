@@ -9,7 +9,7 @@ This project was created with [Better-T-Stack](https://github.com/AmanVarshney01
 - **Expo** - Tools for React Native development
 - **TailwindCSS** - Utility-first CSS for rapid UI development
 - **Convex** - Reactive backend-as-a-service platform
-- **Authentication** - Better-Auth
+- **Authentication** - Clerk
 - **Oxlint** - Oxlint + Oxfmt (linting & formatting)
 - **Turborepo** - Optimized monorepo build system
 
@@ -33,6 +33,12 @@ Follow the prompts to create a new Convex project and connect it to your applica
 
 Copy environment variables from `packages/backend/.env.local` to `apps/*/.env`.
 
+### Clerk Authentication Setup
+
+- Follow the guide: [Convex + Clerk](https://docs.convex.dev/auth/clerk)
+- Set `CLERK_JWT_ISSUER_DOMAIN` in Convex Dashboard
+- Set `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` in `apps/native/.env`
+
 Then, run the development server:
 
 ```bash
@@ -54,6 +60,8 @@ kasunji/
 │   ├── native/      # Mobile application (React Native, Expo)
 ├── packages/
 │   ├── backend/     # Convex backend functions and schema
+│   │   ├── convex/    # Convex functions and schema
+│   │   └── .env.local # Convex environment variables
 ```
 
 ## Available Scripts

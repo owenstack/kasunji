@@ -15,6 +15,7 @@ export const authComponent = createClient<DataModel>(components.betterAuth);
 
 function createAuth(ctx: GenericCtx<DataModel>) {
   return betterAuth({
+    baseURL: siteUrl,
     trustedOrigins: [
       siteUrl,
       nativeAppUrl,
@@ -23,9 +24,11 @@ function createAuth(ctx: GenericCtx<DataModel>) {
         : []),
     ],
     database: authComponent.adapter(ctx),
-    emailAndPassword: {
-      enabled: true,
-      requireEmailVerification: false,
+    socialProviders: {
+      google: {
+        clientId: process.env.GOOGLE_CLIENT_ID as string,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+      },
     },
     plugins: [
       expo(),

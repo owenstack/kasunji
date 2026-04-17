@@ -9,9 +9,6 @@
     "dev:setup": "convex dev --configure --until-success"
   },
   "dependencies": {
-    "@better-auth/expo": "catalog:",
-    "@convex-dev/better-auth": "catalog:",
-    "better-auth": "catalog:",
     "convex": "catalog:",
     "dotenv": "catalog:",
     "zod": "catalog:"
