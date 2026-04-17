@@ -1,0 +1,42 @@
+{
+  "name": "kasunji",
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*"
+    ],
+    "catalog": {
+      "dotenv": "^17.2.2",
+      "zod": "^4.1.13",
+      "typescript": "^5",
+      "convex": "^1.33.1",
+      "better-auth": "1.5.3",
+      "@better-auth/expo": "1.5.3",
+      "@convex-dev/better-auth": "^0.11.3"
+    }
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "check-types": "turbo check-types",
+    "dev:native": "turbo -F native dev",
+    "dev:server": "turbo -F @kasunji/backend dev",
+    "dev:setup": "turbo -F @kasunji/backend dev:setup",
+    "check": "oxlint && oxfmt --write"
+  },
+  "dependencies": {
+    "@kasunji/env": "workspace:*",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@kasunji/config": "workspace:*",
+    "oxfmt": "^0.26.0",
+    "oxlint": "^1.41.0",
+    "turbo": "^2.8.12",
+    "typescript": "catalog:"
+  },
+  "packageManager": "bun@1.3.9"
+}

@@ -1,0 +1,3 @@
+{
+  "extends": "@kasunji/config/tsconfig.base.json"
+}
