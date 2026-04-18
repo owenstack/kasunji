@@ -8,17 +8,29 @@
     },
     "name": "kasunji",
     "slug": "kasunji",
-    "plugins": ["expo-font", [
-      "expo-splash-screen", {
-        "resizeMode": "contain",
-        "backgroundColor": "#ebebd3",
-        "image": "./assets/images/splash-icon.png",
-        "imageWidth": 200
-      }
-    ]],
+    "plugins": [
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "resizeMode": "contain",
+          "backgroundColor": "#ebebd3",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "f0ee7389-ae72-481d-b2a9-86acce334877"
+      }
+    },
+    "android": {
+      "package": "com.oweneefobi.kasunji"
     }
   }
 }
