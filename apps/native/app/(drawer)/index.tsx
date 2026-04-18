@@ -1,9 +1,8 @@
 import { useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "@kasunji/backend/convex/_generated/api";
-import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
-import { Link } from "expo-router";
-import { Button, Chip, Separator, Spinner, Surface, useThemeColor } from "heroui-native";
+import { useQuery } from "convex/react";
+import { Chip, Separator, Spinner, Surface, useThemeColor } from "heroui-native";
 import { Text, View } from "react-native";
 
 import { Container } from "@/components/container";
@@ -64,38 +63,19 @@ export default function Home() {
         </Surface>
       </Surface>
 
-      <Authenticated>
+      {user && (
         <Surface variant="secondary" className="mt-5 p-4 rounded-xl">
           <View className="flex-row items-center justify-between">
             <View className="flex-1">
               <Text className="text-foreground font-medium">
-                {user?.emailAddresses[0].emailAddress}
+                {user.emailAddresses[0].emailAddress}
               </Text>
               <Text className="text-muted text-xs mt-0.5">Private: {privateData?.message}</Text>
             </View>
             <SignOutButton />
           </View>
         </Surface>
-      </Authenticated>
-      <Unauthenticated>
-        <View className="mt-4 gap-3">
-          <Link href="/(auth)/sign-in" asChild>
-            <Button variant="secondary">
-              <Button.Label>Sign In</Button.Label>
-            </Button>
-          </Link>
-          <Link href="/(auth)/sign-up" asChild>
-            <Button variant="ghost">
-              <Button.Label>Sign Up</Button.Label>
-            </Button>
-          </Link>
-        </View>
-      </Unauthenticated>
-      <AuthLoading>
-        <View className="mt-4 items-center">
-          <Spinner size="sm" />
-        </View>
-      </AuthLoading>
+      )}
     </Container>
   );
 }

@@ -8,7 +8,14 @@
     },
     "name": "kasunji",
     "slug": "kasunji",
-    "plugins": ["expo-font"],
+    "plugins": ["expo-font", [
+      "expo-splash-screen", {
+        "resizeMode": "contain",
+        "backgroundColor": "#ebebd3",
+        "image": "./assets/images/splash-icon.png",
+        "imageWidth": 200
+      }
+    ]],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
