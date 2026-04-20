@@ -31,6 +31,7 @@
     },
     "android": {
       "package": "com.oweneefobi.kasunji"
-    }
+    },
+    "version": "2026.04.20-0158"
   }
 }
