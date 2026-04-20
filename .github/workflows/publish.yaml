@@ -1,15 +1,47 @@
+name: Build APK & Auto Release
+
 on:
   push:
     branches:
       - master
-  pull_request:
+
+permissions:
+  contents: write
 
 jobs:
   build-native:
     runs-on: ubuntu-latest
+
     steps:
       - name: 🏗 Setup repo
         uses: actions/checkout@v4
+
+      - name: 🏷 Generate version
+        id: version
+        run: |
+          VERSION="v$(date +'%Y.%m.%d-%H%M')"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "plain_version=$(date +'%Y.%m.%d-%H%M')" >> $GITHUB_OUTPUT
+
+      # 🔥 Sync version into Expo config
+      - name: 📝 Update app.json version
+        run: |
+          jq '.expo.version = "${{ steps.version.outputs.plain_version }}"' apps/native/app.json > tmp.json
+          mv tmp.json apps/native/app.json
+
+      # Optional but CLEAN: commit the version bump
+      - name: 💾 Commit version bump
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add apps/native/app.json
+          git commit -m "chore: bump version to ${{ steps.version.outputs.version }}" || echo "No changes"
+          git push
+
+      - name: 🏷 Create Git Tag
+        run: |
+          git tag ${{ steps.version.outputs.version }}
+          git push origin ${{ steps.version.outputs.version }}
 
       - name: 🏗 Setup Node
         uses: actions/setup-node@v4
@@ -30,6 +62,35 @@ jobs:
       - name: 📦 Install dependencies
         run: bun install
 
+      # 🔥 Capture EXACT build ID
       - name: 🚀 Build app
+        id: build
         working-directory: ./apps/native
-        run: eas build --platform android --profile preview --non-interactive
+        run: |
+          eas build --platform android --profile preview --non-interactive --json > build.json
+          BUILD_ID=$(cat build.json | jq -r '.id')
+          echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
+
+      # 🔥 Wait for THAT build (not "latest")
+      - name: ⏳ Wait for build
+        working-directory: ./apps/native
+        run: |
+          eas build:wait --build-id ${{ steps.build.outputs.build_id }}
+
+      # 🔥 Fetch artifact from THAT build
+      - name: 📥 Download APK
+        working-directory: ./apps/native
+        run: |
+          mkdir -p build
+          eas build:view ${{ steps.build.outputs.build_id }} --json > build-info.json
+          APK_URL=$(cat build-info.json | jq -r '.artifacts.buildUrl')
+          curl -L $APK_URL -o build/app.apk
+
+      - name: 📦 Create Release & Upload APK
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Release ${{ steps.version.outputs.version }}
+          files: ./apps/native/build/app.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

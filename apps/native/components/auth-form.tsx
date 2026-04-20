@@ -1,9 +1,10 @@
-import { useSignIn, useSignUp } from "@clerk/expo";
+import { useAuth, useSignIn, useSignUp } from "@clerk/expo";
 import { useForm } from "@tanstack/react-form";
-import { Button, FieldError, Input, Label, Tabs, TextField, useToast } from "heroui-native";
+import { Button, FieldError, Input, Label, Tabs, TextField, useToast, InputGroup, InputOTP } from "heroui-native";
 import { useState } from "react";
 import { Text, View } from "react-native";
 import z from "zod";
+import { Ionicons } from "@expo/vector-icons";
 
 const authSchema = z.object({
   email: z.email({ message: "Please enter a valid email address" }),
@@ -16,11 +17,24 @@ const verifySchema = z.object({
 
 export function AuthForm() {
   const { toast } = useToast();
+  const { isLoaded } = useAuth();
   const { signIn } = useSignIn();
   const { signUp } = useSignUp();
   const [tab, setTab] = useState<"signIn" | "signUp">("signIn");
   const [pendingVerification, setPendingVerification] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
+  const [show, setShow] = useState(true);
+
+  const showError = (error: unknown, fallback: string) => {
+    const message =
+      error instanceof Error
+        ? error.message
+        : typeof error === "string"
+          ? error
+          : fallback;
+
+    toast.show({ label: message, variant: "danger" });
+  };
 
   const authForm = useForm({
     defaultValues: {
@@ -31,21 +45,28 @@ export function AuthForm() {
       onSubmit: authSchema,
     },
     onSubmit: async ({ value }) => {
+      if (!isLoaded) return;
+
       if (tab === "signIn") {
         try {
           const { error } = await signIn.password({
             emailAddress: value.email,
             password: value.password,
           });
+
           if (error) {
-            toast.show({ label: error.longMessage ?? error.message, variant: "danger" });
+            showError(error.message, "Unable to sign in.");
             return;
           }
+
           if (signIn.status === "complete") {
-            await signIn.finalize();
+            const result = await signIn.finalize();
+            if (result.error) {
+              showError(result.error.message, "Unable to finish signing in.");
+            }
           }
         } catch (error) {
-          toast.show({ label: (error as Error).message, variant: "danger" });
+          showError(error, "Unable to sign in.");
         }
       } else {
         try {
@@ -53,15 +74,22 @@ export function AuthForm() {
             emailAddress: value.email,
             password: value.password,
           });
+
           if (error) {
-            toast.show({ label: error.longMessage ?? error.message, variant: "danger" });
+            showError(error.message, "Unable to sign up.");
             return;
           }
-          await signUp.verifications.sendEmailCode();
+
+          const verification = await signUp.verifications.sendEmailCode();
+          if (verification.error) {
+            showError(verification.error.message, "Unable to send verification code.");
+            return;
+          }
+
           setVerificationEmail(value.email);
           setPendingVerification(true);
         } catch (error) {
-          toast.show({ label: (error as Error).message, variant: "danger" });
+          showError(error, "Unable to sign up.");
         }
       }
     },
@@ -75,15 +103,30 @@ export function AuthForm() {
       onSubmit: verifySchema,
     },
     onSubmit: async ({ value }) => {
+      if (!isLoaded) return;
+
       try {
-        await signUp.verifications.verifyEmailCode({ code: value.code });
+        const { error } = await signUp.verifications.verifyEmailCode({ code: value.code });
+
+        if (error) {
+          showError(error.message, "Unable to verify code.");
+          return;
+        }
+
         if (signUp.status === "complete") {
-          await signUp.finalize();
+          const result = await signUp.finalize();
+          if (result.error) {
+            showError(result.error.message, "Unable to finish signing up.");
+            return;
+          }
         } else {
-          toast.show({ label: "Could not complete verification. Please try again.", variant: "danger" });
+          toast.show({
+            label: "Could not complete verification. Please try again.",
+            variant: "danger",
+          });
         }
       } catch (error) {
-        toast.show({ label: (error as Error).message, variant: "danger" });
+        showError(error, "Unable to verify code.");
       }
     },
   });
@@ -100,14 +143,29 @@ export function AuthForm() {
             return (
               <TextField isInvalid={isInvalid} isRequired>
                 <Label>Verification code</Label>
-                <Input
+                <InputOTP
                   placeholder="Enter verification code"
                   value={field.state.value}
-                  onChangeText={field.handleChange}
+                  onChange={field.handleChange}
                   onBlur={field.handleBlur}
-                  keyboardType="number-pad"
+                  maxLength={6}
                   isInvalid={isInvalid}
-                />
+                  inputMode="numeric"
+              ><InputOTP.Group>
+              <InputOTP.Slot index={0} />
+              <InputOTP.Slot index={1} />
+              </InputOTP.Group>
+              <InputOTP.Separator />
+              <InputOTP.Group>
+              <InputOTP.Slot index={2} />
+              <InputOTP.Slot index={3} />
+              </InputOTP.Group>
+              <InputOTP.Separator />
+              <InputOTP.Group>
+              <InputOTP.Slot index={4} />
+              <InputOTP.Slot index={5} />
+              </InputOTP.Group>
+                </ InputOTP>
                 {isInvalid && <FieldError>{field.state.meta.errors?.[0]?.message}</FieldError>}
               </TextField>
             );
@@ -122,7 +180,15 @@ export function AuthForm() {
           )}
         </verifyForm.Subscribe>
 
-        <Button onPress={() => signUp.verifications.sendEmailCode()} className="items-center">
+        <Button
+          onPress={async () => {
+            const { error } = await signUp.verifications.sendEmailCode();
+            if (error) {
+              showError(error.message, "Unable to resend verification code.");
+            }
+          }}
+          className="items-center"
+        >
             <Button.Label>Resend code</Button.Label>
         </Button>
 
@@ -167,20 +233,25 @@ export function AuthForm() {
           return (
             <TextField isInvalid={isInvalid} isRequired>
               <Label>Password</Label>
-              <Input
-                placeholder="Enter your password"
-                value={field.state.value}
-                onChangeText={field.handleChange}
-                onBlur={field.handleBlur}
-                secureTextEntry
-                isInvalid={isInvalid}
-              />
+                <InputGroup>
+                <InputGroup.Input placeholder="Enter your password"
+                  value={field.state.value}
+                  onChangeText={field.handleChange}
+                  onBlur={field.handleBlur}
+                  secureTextEntry={show}
+                  isInvalid={isInvalid}
+                />
+                <InputGroup.Suffix>
+                  <Button variant="ghost" onPress={() => setShow((current) => !current)}>
+                    <Ionicons name={show ? "eye-off" : "eye"} size={24} className="text-foreground" />
+                  </Button>
+                </InputGroup.Suffix>
+              </InputGroup>
               {isInvalid && <FieldError>{field.state.meta.errors?.[0]?.message}</FieldError>}
             </TextField>
           );
         }}
       </authForm.Field>
-
       <authForm.Subscribe selector={(state) => [state.isSubmitting, state.canSubmit]}>
         {([isSubmitting, canSubmit]) => (
           <Button onPress={authForm.handleSubmit} isDisabled={!canSubmit || isSubmitting}>
@@ -190,8 +261,8 @@ export function AuthForm() {
                   ? "Signing in..."
                   : "Signing up..."
                 : tab === "signIn"
-                  ? "Sign In"
-                  : "Sign Up"}
+                  ? "Sign in"
+                  : "Sign up"}
             </Button.Label>
           </Button>
         )}

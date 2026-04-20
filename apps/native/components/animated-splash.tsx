@@ -2,7 +2,9 @@ import { useAuth } from "@clerk/expo";
 import * as SplashScreen from "expo-splash-screen";
 import { useThemeColor } from "heroui-native";
 import { useCallback, useEffect, useState } from "react";
-import { Image, ScrollView, View } from "react-native";
+import { View } from "react-native"
+import {Image} from 'expo-image'
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -92,7 +94,7 @@ export function AnimatedSplashScreen({ children }: Props) {
 
   return (
     <View className="flex-1">
-      {children}
+      {isSignedIn ? children : null}
       {!splashDone && (
         <Animated.View
           className="absolute inset-0 justify-center items-center"
@@ -102,15 +104,16 @@ export function AnimatedSplashScreen({ children }: Props) {
       )}
       {!splashDone || !isSignedIn ? (
         <View className="absolute inset-0" style={{ backgroundColor }} pointerEvents="box-none">
-          <ScrollView
+          <KeyboardAwareScrollView
             contentContainerStyle={{ flexGrow: 1, alignItems: "center", paddingTop: "30%" }}
             keyboardShouldPersistTaps="handled"
+            bottomOffset={20}
           >
             <Animated.View className="items-center" style={logoStyle}>
               <Image
                 source={SPLASH_ICON}
                 style={{ width: 200, height: 200 }}
-                resizeMode="contain"
+                contentFit="contain"
               />
             </Animated.View>
 
@@ -124,7 +127,7 @@ export function AnimatedSplashScreen({ children }: Props) {
                 <View style={{ height: insets.bottom + 20 }} />
               </Animated.View>
             )}
-          </ScrollView>
+          </KeyboardAwareScrollView>
         </View>
       ) : null}
     </View>

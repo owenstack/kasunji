@@ -11,6 +11,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 
 import { AnimatedSplashScreen } from "@/components/animated-splash";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
+import { useSyncUser } from "@/hooks/use-sync-user";
 
 export const unstable_settings = {
   initialRouteName: "(drawer)",
@@ -21,6 +22,8 @@ const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
 });
 
 function StackLayout() {
+  useSyncUser();
+
   return (
     <Stack screenOptions={{}}>
       <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
